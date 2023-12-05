@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Warning: Potentially Unsafe URL</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+        .alert {
+            color: red;
+            font-size: 24px;
+        }
+        .description {
+            margin-top: 20px;
+        }
+        .button {
+            margin-top: 30px;
+        }
+        a {
+            text-decoration: none;
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="alert">Warning: Potentially Unsafe URL Detected</div>
+        <div class="description">
+            <p>You are attempting to visit the URL below, which has been flagged as potentially unsafe or malicious. Proceed with caution.</p>
+            <div id="urlDisplay"></div> <!-- Div to display the URL -->
+        </div>
+        <div class="button">
+            <button id="proceedButton">Proceed Anyway</button>
+        </div>
+    </div>
+    <script src="warning.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "URL Checker",
+  "version": "1.0",
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "*://*/*"
+  ],
+  "web_accessible_resources": [
+    "localHandler.html", "handler.js", "warning.html", "warning.js"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  }
+}
