@@ -7,8 +7,18 @@ from bs4 import BeautifulSoup
 import concurrent.futures
 
 def hyperlink_number(url):
-    hyperlink_static = count_hyperlinks_static(url)
-    hyperlink_dynamic = -1
+    hyperlink_static = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(count_hyperlinks_static, url)
+        try:
+            # Wait for 5 seconds for count_hyperlinks_dynamic to complete
+            hyperlink_dynamic = future.result(timeout=3)
+        except concurrent.futures.TimeoutError:
+            print("count_hyperlinks_static timed out. the webpage can not reached")
+            return 0
+    
+    
+    hyperlink_dynamic = 0
     # Execute count_hyperlinks_dynamic with a timeout
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(count_hyperlinks_dynamic, url)
@@ -16,7 +26,7 @@ def hyperlink_number(url):
             # Wait for 5 seconds for count_hyperlinks_dynamic to complete
             hyperlink_dynamic = future.result(timeout=15)
         except concurrent.futures.TimeoutError:
-            print("count_hyperlinks_dynamic timed out. Continuing with static count.")
+            print("count_hyperlinks_dynamic timed out. use static count.")
 
     return max(hyperlink_dynamic, hyperlink_static)
 

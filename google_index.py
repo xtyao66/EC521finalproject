@@ -9,7 +9,7 @@ API_KEY = ""
 SEARCH_ENGINE_ID = ""
 
 # otherwise it will use request, ip could be baned
-def index_serach(url):
+def index_search(url):
     if API_KEY == "":
         return check_google_index_requests(url)
     else:

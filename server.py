@@ -3,9 +3,10 @@ import torch
 import requests
 from model_multi import AdvancedURLNetWithAttention, transform_and_predict
 import joblib
+import concurrent.futures
 
 from subdomain_count import subdomain_number
-from google_index import index_serach
+from google_index import index_search
 from hyperlinks import hyperlink_number
 
 app = Flask(__name__)
@@ -38,11 +39,16 @@ def generate_features(url):
     else:
         feature_protocol = -1  
 
-    nb_subdomain = subdomain_number(url)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Start the operations and mark each future with its function
+        future_subdomain = executor.submit(subdomain_number, url)
+        future_google_index = executor.submit(index_search, url)
+        future_hyperlinks = executor.submit(hyperlink_number, url)
 
-    google_index = index_serach(url)
-
-    hyperlinks = hyperlink_number(url)
+        # Wait for the results
+        nb_subdomain = future_subdomain.result()
+        google_index = future_google_index.result()
+        hyperlinks = future_hyperlinks.result()
 
     # return [feature_url, feature_length, feature_dots, feature_protocol, nb_subdomain, google_index, hyperlinks]
     return [feature_url, feature_length, feature_dots, feature_protocol, nb_subdomain]
