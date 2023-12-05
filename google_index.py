@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 
 # Setup your search_engine_id and api_key refer to this
 # https://developers.google.com/custom-search/v1/introduction
-API_KEY = ""
-SEARCH_ENGINE_ID = ""
+API_KEY = "AIzaSyDBvkDdbag8ygcwBhHdS809LxszBz-rZoI"
+SEARCH_ENGINE_ID = "10f5084cb20b448d8"
 
 # otherwise it will use request, ip could be baned
 def index_search(url):

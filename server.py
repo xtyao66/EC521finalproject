@@ -16,7 +16,7 @@ app = Flask(__name__)
 # and the saved vectorizer and scaler are named 'tfidf_vectorizer.joblib' and 'standard_scaler.joblib', respectively.
 
 # Load the trained model
-num_features = 1004
+num_features = 1006
 model = AdvancedURLNetWithAttention(num_features)
 model.load_state_dict(torch.load('model_state_dict.pth'))
 model.eval()  # Set the model to evaluation mode
@@ -53,8 +53,8 @@ def generate_features(url):
         google_index = future_google_index.result()
         hyperlinks = future_hyperlinks.result()
 
-    # return [feature_url, feature_length, feature_dots, feature_protocol, nb_subdomain, google_index, hyperlinks]
-    return [feature_url, feature_length, feature_dots, feature_protocol, nb_subdomain]
+    return [feature_url, feature_length, feature_dots, feature_protocol, nb_subdomain, google_index, hyperlinks]
+    # return [feature_url, feature_length, feature_dots, feature_protocol, nb_subdomain]
 
 
 @app.route('/predict', methods=['GET'])
@@ -67,6 +67,7 @@ def predict_url():
 
     prediction = transform_and_predict(features, vectorizer, scaler, model)
 
+    print("url, length, dots, is_http, nb_subdomain, !google_indexed, hyperlinks, malicious")
     print(features, prediction)
 
     return jsonify({"url": url, "prediction": "Malicious" if prediction == 1 else "Benign"})

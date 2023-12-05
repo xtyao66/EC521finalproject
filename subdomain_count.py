@@ -19,7 +19,7 @@ def get_subdomain_count(url):
         return cache[domain]
     api_endpoint = "https://api.subdomain.center/?domain="
     try:
-        response = requests.get(api_endpoint + domain, timeout=10)
+        response = requests.get(api_endpoint + domain, timeout=30)
         if response.status_code == 200:
             subdomains = response.json()
             for k in subdomains:
@@ -29,10 +29,10 @@ def get_subdomain_count(url):
             return len(subdomains)
         else:
             print("Error: Unable to access subdomain API")
-            return -1
+            return 0
     except Exception as e:
         print(f"get_subdomain_count Error: {e}")
-        return -1
+        return 0
 
 
 # As it is a demo, we just use a cache instead of database.
