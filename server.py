@@ -70,7 +70,14 @@ def predict_url():
     print("url, length, dots, is_http, nb_subdomain, !google_indexed, hyperlinks, malicious")
     print(features, prediction)
 
-    return jsonify({"url": url, "prediction": "Malicious" if prediction == 1 else "Benign"})
+    return jsonify({"google_indexed": not features[5], "nb_hyperlinks": features[6],"nb_subdomain": features[4], "url": url, "prediction": "Malicious" if prediction == 1 else "Benign"})
+
+
+@app.route('/ping', methods=['GET'])
+def ping():
+    return jsonify({"online": "true"})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9090)
+
+    
