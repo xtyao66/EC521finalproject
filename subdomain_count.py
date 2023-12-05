@@ -6,29 +6,20 @@ import concurrent.futures
 cache = {}
 
 def subdomain_number(url):
-    subdomain_number_default = 0
-    subdomain_number = -1
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(get_subdomain_count, url)
-        try:
-            # Wait for 15 seconds for get_subdomain_count to complete
-            subdomain_number = future.result(timeout=15)
-        except concurrent.futures.TimeoutError:
-            print("get_subdomain_count timed out. Continuing with default value.")
-            subdomain_number = subdomain_number_default
-
+    subdomain_number = get_subdomain_count(url)
     return subdomain_number
 
     
 def get_subdomain_count(url):
+    global cache
+    print(cache)
     domain = get_domain(url)
     if domain in cache:
         print("get_subdomain_count: exists in the cache.")
         return cache[domain]
     api_endpoint = "https://api.subdomain.center/?domain="
     try:
-        response = requests.get(api_endpoint + domain)
+        response = requests.get(api_endpoint + domain, timeout=10)
         if response.status_code == 200:
             subdomains = response.json()
             for k in subdomains:
@@ -46,6 +37,7 @@ def get_subdomain_count(url):
 
 # As it is a demo, we just use a cache instead of database.
 def add_domain_to_database(subdomains):
+    global cache
     n = len(subdomains)
     for k in subdomains:
         cache[k] = n

@@ -5,29 +5,11 @@ from selenium.webdriver.common.by import By
 import requests
 from bs4 import BeautifulSoup
 import concurrent.futures
+from selenium.common.exceptions import TimeoutException
 
 def hyperlink_number(url):
-    hyperlink_static = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(count_hyperlinks_static, url)
-        try:
-            # Wait for 5 seconds for count_hyperlinks_dynamic to complete
-            hyperlink_dynamic = future.result(timeout=3)
-        except concurrent.futures.TimeoutError:
-            print("count_hyperlinks_static timed out. the webpage can not reached")
-            return 0
-    
-    
-    hyperlink_dynamic = 0
-    # Execute count_hyperlinks_dynamic with a timeout
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(count_hyperlinks_dynamic, url)
-        try:
-            # Wait for 5 seconds for count_hyperlinks_dynamic to complete
-            hyperlink_dynamic = future.result(timeout=15)
-        except concurrent.futures.TimeoutError:
-            print("count_hyperlinks_dynamic timed out. use static count.")
-
+    hyperlink_static = count_hyperlinks_static(url)
+    hyperlink_dynamic = count_hyperlinks_dynamic(url)
     return max(hyperlink_dynamic, hyperlink_static)
 
 
@@ -36,26 +18,34 @@ def hyperlink_number(url):
 def count_hyperlinks_dynamic(url):
     try:
         driver = webdriver.Chrome()
-        driver.get(url)
+        driver.set_page_load_timeout(8) 
+
+        try:
+            driver.get(url)
+        except TimeoutException:
+            print("Page load timed out. Exiting.")
+            return -1
 
         time.sleep(2)
 
         hyperlinks = driver.find_elements(By.TAG_NAME, "a")
         count = len(hyperlinks)
 
-        driver.quit()
-        print("count_hyperlinks_dynamic", count)
-        return count
     except Exception as e:
         print(f"Error: {e}")
         return -1
+    finally:
+        driver.quit()  
+
+    print("count_hyperlinks_dynamic", count)
+    return count
 
 
 # Method 2:
 # static <a>
 def count_hyperlinks_static(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=3)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, 'html.parser')

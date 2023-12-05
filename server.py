@@ -4,6 +4,7 @@ import requests
 from model_multi import AdvancedURLNetWithAttention, transform_and_predict
 import joblib
 import concurrent.futures
+import threading
 
 from subdomain_count import subdomain_number
 from google_index import index_search
@@ -38,6 +39,8 @@ def generate_features(url):
         feature_protocol = 0
     else:
         feature_protocol = -1  
+
+    nb_subdomain = -1
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Start the operations and mark each future with its function
