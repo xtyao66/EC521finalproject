@@ -12,7 +12,7 @@ function goToOriginalUrl() {
     window.location.href = url.href; // Navigates to the modified URL
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('proceedButton').addEventListener('click', goToOriginalUrl);
     const url = getParameterByName('goto'); // Get the URL parameter
     // Set the URL in the div

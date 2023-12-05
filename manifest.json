@@ -9,8 +9,12 @@
     "*://*/*"
   ],
   "web_accessible_resources": [
-    "localHandler.html", "handler.js", "warning.html", "warning.js"
+    "localHandler.html", "handler.js", "warning.html", "warning.js", "hello.html", "bootstrap.min.css"
   ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "background": {
     "scripts": ["background.js"],
     "persistent": true
