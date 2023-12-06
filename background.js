@@ -3,6 +3,56 @@ let allowOrigin = {};
 
 let keyPair = [];
 let pluginOpt = [];
+let verifyMap = {};
+
+function str2ab(str) {
+  const buf = new ArrayBuffer(str.length);
+  const bufView = new Uint8Array(buf);
+  for (let i = 0, strLen = str.length; i < strLen; i++) {
+    bufView[i] = str.charCodeAt(i);
+  }
+  return buf;
+}
+
+async function importPublicKey(pem) {
+  const arrayBuffer = window.atob(pem);
+  // convert from a binary string to an ArrayBuffer
+  const binaryDer = str2ab(arrayBuffer);
+  return window.crypto.subtle.importKey(
+    "spki",
+    binaryDer,
+    {
+      name: "ECDSA",
+      namedCurve: 'P-256'
+    },
+    true,
+    ["verify"]
+  );
+}
+
+function b642ab(base64_string) {
+  return Uint8Array.from(window.atob(base64_string), c => c.charCodeAt(0));
+}
+
+async function verifySignature(signature, public_key, dataStr) {
+  var dataBuf = new TextEncoder().encode(dataStr)
+
+  return window.crypto.subtle.verify(
+    {
+      name: "ECDSA",
+      namedCurve: "P-256",
+      hash: { name: "SHA-256" },
+    },
+    public_key,
+    b642ab(signature),
+    dataBuf
+  );
+}
+
+const publicKey = `
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEOlUz2bUCHQxoVE6x5qwq/a/y/yTabDna/WXKQ6s2SB8dmQo3267COzekI3ZGZ0flTdFo1sxvdPmr1UnmTVCcew==
+`
+
 
 function matchRuleShort(str, rule) {
   var escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
@@ -15,15 +65,14 @@ function isMatch(url, regexPatterns) {
 
   // Iterate over each pattern
   for (let i = 0; i < patterns.length; i++) {
-      // Test if the url matches the current pattern
-      if (matchRuleShort(url, patterns[i])) {
-          return true; // Return true if there is a match
-      }
+    // Test if the url matches the current pattern
+    if (matchRuleShort(url, patterns[i])) {
+      return true; // Return true if there is a match
+    }
   }
 
   return false; // Return false if no patterns matched
 }
-
 
 chrome.webRequest.onBeforeRequest.addListener(
   function (details) {
@@ -34,8 +83,6 @@ chrome.webRequest.onBeforeRequest.addListener(
       // confirm(details.url);
       const urlObj = new URL(details.url);
       const origin = urlObj.origin; // Extracts the origin part of the URL
-
-      console.log(urlObj);
       // load plugin options
       if (pluginOpt.mode) {
         if (pluginOpt.mode === "disabled") {
@@ -67,20 +114,52 @@ chrome.webRequest.onBeforeRequest.addListener(
             };
           } else {
             return {
-              redirectUrl: "https://google.com/"
+              redirectUrl:
+                chrome.extension.getURL('hello.html')
             };
           }
         } else if (urlObj.searchParams.get('msafebrowsing_access_token') === "ECDSA") {
-
+          const signature = urlObj.searchParams.get('msafebrowsing_ecdsa_token');
+          urlObj.searchParams.delete('msafebrowsing_access_token');
+          urlObj.searchParams.delete('msafebrowsing_ecdsa_token');
+          // if (verifyMap[signature] === true) {
+          //   verifyMap[signature] = false;
+          //   allowOrigin[origin] = Date.now(); // allow website access once signature pass
+          //   return {
+          //     redirectUrl: urlObj.href
+          //   };
+          // } else 
+          {
+            verifyMap[signature] = origin;
+            console.log("new vmap " + JSON.stringify(verifyMap));
+            verifySignature(signature, keyPair[0], urlObj.href + "Benign").then((result) => {
+              nonceMap[origin] = undefined;
+              if (result) {
+                allowOrigin[verifyMap[signature]] = Date.now(); // allow website access once signature pass
+                verifyMap[signature] = undefined;
+                console.log("new amap " + JSON.stringify(allowOrigin));
+              } else {
+                alert("Forged malicious website access detected : " + urlObj.href);
+              }
+            });
+            return {
+              redirectUrl:
+                chrome.extension.getURL('cryptoHandler.html?url='
+                  + encodeURIComponent(urlObj.href)
+                  + "&msafebrowsing_ecdsa_token="
+                  + encodeURIComponent(signature))
+            };
+          }
         }
       }
+      urlObj.searchParams.delete('msafebrowsing_access_token');
       const nonce = generateNonce(); // Function to generate a unique nonce
       nonceMap[origin] = nonce;
       // Redirect to a local handler that will do the check and then redirect accordingly
       return {
         redirectUrl:
           chrome.extension.getURL('localHandler.html?url='
-            + encodeURIComponent(details.url)
+            + encodeURIComponent(urlObj.href)
             + "&token="
             + encodeURIComponent(nonce))
       };
@@ -90,14 +169,6 @@ chrome.webRequest.onBeforeRequest.addListener(
   { urls: ["*://*/*"] },
   ["blocking"]
 );
-
-function isUrlMalicious(url) {
-  // Implement your logic or API call here
-  // This is a placeholder function
-  // For real use, you would make an asynchronous API call
-  // Note: Synchronous XMLHttpRequests in the background script are generally discouraged
-  return true;  // Replace with actual logic
-}
 
 async function generateKeyPair() {
   return await window.crypto.subtle.generateKey({
@@ -112,8 +183,8 @@ function generateNonce() {
   return `${now}-${random}`;
 }
 
-generateKeyPair().then((kp) => {
-  keyPair = kp;
+importPublicKey(publicKey).then((pubKey) => {
+  keyPair = [pubKey];
 });
 
 async function loadStorageValue() {
@@ -128,3 +199,10 @@ async function loadStorageValue() {
 loadStorageValue().then(() => {
   console.log("Succesfully load config.")
 })
+
+
+chrome.storage.sync.onChanged.addListener(() => {
+  loadStorageValue().then(() => {
+    console.log("Succesfully reloaded config.")
+  })
+});

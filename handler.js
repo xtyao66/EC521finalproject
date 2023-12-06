@@ -11,7 +11,7 @@ window.onload = function () {
     const headerToken = "cNh$gVrbEK%2WSU7*iX@HEoN79wF";
 
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://108.26.205.240:9090/predict?url=" + encodeURIComponent(originalUrl), true);
+    xhr.open("GET", "http://108.26.205.240:9090/predict?url=" + encodeURIComponent(new URL(originalUrl).href), true);
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             // Check if the request was successful
@@ -25,7 +25,12 @@ window.onload = function () {
                     pormpt.innerText = "You're in safe zone, redirecting...";
                     pormpt.style = "color: green";
                     let url = new URL(originalUrl);
-                    url.searchParams.append('msafebrowsing_access_token', token); // Adds the token parameter
+                    if ('signature' in response) {
+                        url.searchParams.append('msafebrowsing_access_token', 'ECDSA'); // Adds the token parameter
+                        url.searchParams.append('msafebrowsing_ecdsa_token', response['signature'])
+                    } else {
+                        url.searchParams.append('msafebrowsing_access_token', token); // Adds the token parameter
+                    }
 
                     window.location.href = url.href; // Navigates to the modified URL
                 }

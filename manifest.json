@@ -9,7 +9,7 @@
     "*://*/*"
   ],
   "web_accessible_resources": [
-    "localHandler.html", "handler.js", "warning.html", "warning.js", "hello.html", "bootstrap.min.css"
+    "localHandler.html", "handler.js", "warning.html", "warning.js", "hello.html", "bootstrap.min.css", "cryptoHandler.html", "crypto.js"
   ],
   "options_ui": {
     "page": "options.html",
