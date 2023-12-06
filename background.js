@@ -98,8 +98,14 @@ chrome.webRequest.onBeforeRequest.addListener(
       }
       // confirm('Checking origin ' + origin);
       // confirm("orogins " + JSON.stringify(allowOrigin));
-      if (origin in allowOrigin) {
-        return { cancel: false };
+      if (allowOrigin[origin] && allowOrigin[origin] > 0) {
+        // expire the unconditional allow cache... when necessary
+        if (pluginOpt.expiry === 0 || ((Date.now() - allowOrigin[origin]) / 1000) < pluginOpt.expiry) {
+          return { cancel: false };
+        } else {
+          console.log("Expired cache that are too old... " + origin);
+          allowOrigin[origin] = undefined;
+        }
       }
       if (nonceMap[origin]) {
         // confirm('got token ' + urlObj.searchParams.get('msafebrowsing_access_token') + " ct" + nonceMap[origin]);
@@ -189,9 +195,9 @@ importPublicKey(publicKey).then((pubKey) => {
 
 async function loadStorageValue() {
   chrome.storage.sync.get(
-    { pluginMode: 'enabled', pluginWhitelist: "*://*.google.com/*;\nhttps://*.youtube.com/*" },
+    { pluginMode: 'enabled', pluginWhitelist: "*://*.google.com/*;\nhttps://*.youtube.com/*", pluginExpiry: '43200' },
     (items) => {
-      pluginOpt = { mode: items.pluginMode, list: items.pluginWhitelist };
+      pluginOpt = { mode: items.pluginMode, list: items.pluginWhitelist, expiry: items.pluginExpiry };
     }
   );
 }

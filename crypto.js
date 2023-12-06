@@ -55,7 +55,36 @@ importPublicKey(publicKey).then((pubKey) => {
     //     console.log(result);
     // })
 
+    document.getElementById("divShowUrl").innerText = gotoToken;
+
     setTimeout(() => {
         window.location.href = gotoToken; // Navigates to the modified URL
-    }, 2000);
+    }, 3000);
 })
+
+function addToTrusted() {
+    const url = new URL(window.location.href);
+    const gotoToken = decodeURIComponent(url.searchParams.get('url'));
+    chrome.storage.sync.get(
+        { pluginWhitelist: "*://*.google.com/*;\nhttps://*.youtube.com/*" },
+        (items) => {
+            let separator = '';
+            if (! /.*;\s*$/.test(items.pluginWhitelist)) {
+                separator += ';\n'
+            }
+            chrome.storage.sync.set(
+                { pluginWhitelist: items.pluginWhitelist + separator + gotoToken.replace(';', '%3B') + '*' },
+                () => {
+                    // Update status to let user know options were saved.
+                    const status = document.getElementById('proceedButton');
+                    status.textContent = 'Options saved.';
+                    status.disabled = true;
+                }
+            );
+        }
+    );
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('proceedButton').addEventListener('click', addToTrusted);
+});

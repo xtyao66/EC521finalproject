@@ -11,7 +11,7 @@ window.onload = function () {
     const headerToken = "cNh$gVrbEK%2WSU7*iX@HEoN79wF";
 
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "http://108.26.205.240:9090/predict?url=" + encodeURIComponent(new URL(originalUrl).href), true);
+    xhr.open("GET", "http://108.26.205.240:9090/predict1?url=" + encodeURIComponent(new URL(originalUrl).href), true);
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             // Check if the request was successful
