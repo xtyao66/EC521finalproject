@@ -94,6 +94,11 @@ chrome.webRequest.onBeforeRequest.addListener(
           } else {
             return {}
           }
+        } else {
+          if (pluginOpt.mode === "blacklist") {
+            // Continue normal navigation
+            return {}
+          }
         }
       }
       // confirm('Checking origin ' + origin);
