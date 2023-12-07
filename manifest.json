@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "name": "URL Checker",
-  "version": "1.0",
+  "name": "URL Secure",
+  "version": "1.01",
   "permissions": [
     "webRequest",
     "webRequestBlocking",
