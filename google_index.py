@@ -6,8 +6,8 @@ from bs4 import BeautifulSoup
 
 # Setup your search_engine_id and api_key refer to this
 # https://developers.google.com/custom-search/v1/introduction
-API_KEY = "AIzaSyAccy9uGjvPyzPDSwjyICJERKBCmiPRw-8"
-SEARCH_ENGINE_ID = "673cc965309394656"
+API_KEY = ""
+SEARCH_ENGINE_ID = ""
 
 class Index_Checker:
     def __init__(self):

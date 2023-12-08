@@ -15,9 +15,9 @@ class SubdomainCounter:
             print("Cached: Subdomain")
             return int(cached_count)
         
-        #at_IFqjecj2qOKRWgzWvHqxJg9PDbVAN
-        api_endpoint = "https://subdomains.whoisxmlapi.com/api/v1?apiKey=at_IFqjecj2qOKRWgzWvHqxJg9PDbVAN&domainName="   
-        #api_endpoint = "https://subdomains.whoisxmlapi.com/api/v1?apiKey=at_P0N8Toc4J4uLTe6bEiDInbMFIBpaF&domainName="
+        #get key from this link
+        #https://subdomains.whoisxmlapi.com/ 
+        api_endpoint = "https://subdomains.whoisxmlapi.com/api/v1?apiKey=your_key&domainName="   
 
 
         try:
