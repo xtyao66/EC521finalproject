@@ -2,65 +2,55 @@ from utils import get_domain
 import requests
 import time
 import concurrent.futures
+import redis
 
-cache = {}
+class SubdomainCounter:
+    def __init__(self):
+        self.redis = redis.Redis(host='localhost', port=6379, db=0)
 
-def subdomain_number(url):
-    subdomain_number = get_subdomain_count(url)
-    return subdomain_number
-
-    
-def get_subdomain_count(url):
-    global cache
-    print(cache)
-    domain = get_domain(url)
-    if domain in cache:
-        print("get_subdomain_count: exists in the cache.")
-        return cache[domain]
-    api_endpoint = "https://api.subdomain.center/?domain="
-    try:
-        response = requests.get(api_endpoint + domain, timeout=30)
-        if response.status_code == 200:
-            subdomains = response.json()
-            for k in subdomains:
-                print(k)
-            add_domain_to_database(subdomains)
-            print("get_subdomain_count: not exist in the cache.")
-            return len(subdomains)
-        else:
-            print("Error: Unable to access subdomain API")
-            return 0
-    except Exception as e:
-        print(f"get_subdomain_count Error: {e}")
-        return 0
+    def get_subdomain_count(self, url):
+        domain = get_domain(url)
+        cached_count = self.redis.get(f"subdomain_count:{domain}")
+        if cached_count is not None:
+            print("Cached: Subdomain")
+            return int(cached_count)
+        
+        #at_IFqjecj2qOKRWgzWvHqxJg9PDbVAN
+        api_endpoint = "https://subdomains.whoisxmlapi.com/api/v1?apiKey=at_IFqjecj2qOKRWgzWvHqxJg9PDbVAN&domainName="   
+        #api_endpoint = "https://subdomains.whoisxmlapi.com/api/v1?apiKey=at_P0N8Toc4J4uLTe6bEiDInbMFIBpaF&domainName="
 
 
-# As it is a demo, we just use a cache instead of database.
-def add_domain_to_database(subdomains):
-    global cache
-    n = len(subdomains)
-    for k in subdomains:
-        cache[k] = n
+        try:
+            response = requests.get(api_endpoint + domain)
+            if response.status_code == 200:
+                data = response.json()
+                subdomains = []
+                if 'result' in data and 'records' in data['result']:
+                    subdomains = [record['domain'] for record in data['result']['records']]
 
-# UT to test search time and cache time
-def domain_count_UT():
-    start_time = time.time()
-    print(get_subdomain_count("https://wwei.one"))
-    
-    search_time = time.time()
-    print("search time: ", search_time - start_time)
+                if len(subdomains) == 0:
+                    self.redis.set(f"subdomain_count:{domain}", 1, ex=2592000)  
+                    return 1
+                
+                # add domain/subdomain itself.
+                self.redis.set(f"subdomain_count:{domain}", len(subdomains), ex=2592000)
 
-    print(get_subdomain_count("https://bio.wwei.one"))
-    cache_time = time.time()
-    print("cache time: ", cache_time - search_time)
+                # add others.
+                self.add_domain_to_database(subdomains)
+                print("get_subdomain_count: not exist in the cache.")
+                return len(subdomains)
+            else:
+                print("Error: Unable to access subdomain API")
+                self.redis.set(f"subdomain_count:{domain}", 1, ex=2592000)
+                return 1
+        except Exception as e:
+            print(f"get_subdomain_count Error: {e}")
+            self.redis.set(f"subdomain_count:{domain}", 1, ex=2592000)
+            return 1
 
-# domain_count_UT()
 
-# UT to test timeout
-def domain_count_UT_2():
-    subdomain_number("https://wwei.one")
-    # if timeout will continue to search and add to the database.
-    time.sleep(20)
-    subdomain_number("https://bio.wwei.one")
-
-# domain_count_UT_2()
+    # As it is a demo, we just use a cache instead of database.
+    def add_domain_to_database(self, subdomains):
+        n = len(subdomains)
+        for k in subdomains:
+            self.redis.set(f"subdomain_count:{k}", n, ex=2592000)
