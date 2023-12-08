@@ -1,4 +1,5 @@
 # EC521finalproject
+Malicious Website Detection System
 
 ## Backend Server
 1. Start a redis and change all corresponding config `self.redis = redis.Redis(host='localhost', port=6379, db=0)`
